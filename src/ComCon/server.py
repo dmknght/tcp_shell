@@ -11,6 +11,7 @@ elif sys.version_info[0] == 3:
 # TODO remove client died
 # TODO traceroute client
 # TODO exit command in submodule
+# TODO kill client from server
 
 def int_xor(cleartext, key):
 	ret = ""

