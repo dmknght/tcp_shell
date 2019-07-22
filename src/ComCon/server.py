@@ -131,7 +131,7 @@ Help:\n
 					except Exception:
 						print("Unknow command {}".format(command))
 			except KeyboardInterrupt:
-				break
+				print("")
 	
 	def main_cmd_session(self, args):
 		if not args:
