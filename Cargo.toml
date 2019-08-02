@@ -5,3 +5,4 @@ authors = ["dmknght"]
 edition = "2018"
 
 [dependencies]
+pyo3 = "0.7.0"
